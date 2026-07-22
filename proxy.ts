@@ -5,7 +5,10 @@ import { SUPABASE_ANON_KEY, SUPABASE_URL, isSupabaseConfigured } from "@/lib/sup
 
 // Next.js 16 renamed Middleware to Proxy; the contract is unchanged.
 
-const PUBLIC_PATHS = ["/login", "/auth"]
+// /api/cron authenticates itself via CRON_SECRET (see route.ts) — a scheduler
+// calling it has no Supabase session, so it must bypass this check entirely
+// rather than get redirected to /login like a signed-out browser would.
+const PUBLIC_PATHS = ["/login", "/auth", "/api/cron"]
 
 function isPublic(pathname: string) {
   return PUBLIC_PATHS.some((path) => pathname === path || pathname.startsWith(`${path}/`))

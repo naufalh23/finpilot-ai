@@ -11,6 +11,7 @@ const KIND_TABS: Record<UpcomingBill["kind"], string> = {
   SUBSCRIPTION: "subscription",
   CREDIT_CARD: "card",
   LOAN: "loan",
+  RECURRING: "recurring",
 }
 
 export function UpcomingBills({ bills }: { bills: UpcomingBill[] }) {

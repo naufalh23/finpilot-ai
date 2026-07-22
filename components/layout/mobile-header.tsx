@@ -7,9 +7,19 @@ import { Search, Sparkles } from "lucide-react"
 import { SIDEBAR_ITEMS, isActivePath } from "@/components/layout/nav-items"
 import { ThemeToggle } from "@/components/layout/theme-toggle"
 import { UserMenu, type SessionUser } from "@/components/layout/user-menu"
+import { NotificationBell } from "@/components/notifications/notification-bell"
 import { Button } from "@/components/ui/button"
+import type { NotificationItem } from "@/lib/queries/notifications"
 
-export function MobileHeader({ user }: { user: SessionUser }) {
+export function MobileHeader({
+  user,
+  notifications,
+  unreadCount,
+}: {
+  user: SessionUser
+  notifications: NotificationItem[]
+  unreadCount: number
+}) {
   const pathname = usePathname()
   const current = SIDEBAR_ITEMS.find((item) => isActivePath(pathname, item.href))
 
@@ -30,6 +40,7 @@ export function MobileHeader({ user }: { user: SessionUser }) {
             <Search className="size-[18px]" />
             <span className="sr-only">Cari transaksi</span>
           </Button>
+          <NotificationBell notifications={notifications} unreadCount={unreadCount} />
           <ThemeToggle />
           <UserMenu user={user} />
         </div>

@@ -3,7 +3,12 @@ import "server-only"
 import { requireUser } from "@/lib/auth"
 import { prisma } from "@/lib/db"
 import { startOfDay, toNumber } from "@/lib/format"
-import type { Frequency, LoanType, SubscriptionStatus } from "@/lib/generated/prisma/enums"
+import type {
+  Frequency,
+  LoanType,
+  SubscriptionStatus,
+  TransactionType,
+} from "@/lib/generated/prisma/enums"
 import { getWallets } from "@/lib/queries/wallets"
 
 const DAY_MS = 86_400_000
@@ -90,11 +95,11 @@ export type SubscriptionSummary = {
   isDue: boolean
 }
 
-export async function getSubscriptions(): Promise<SubscriptionSummary[]> {
-  const user = await requireUser()
+export async function getSubscriptions(userId?: string): Promise<SubscriptionSummary[]> {
+  const resolvedUserId = userId ?? (await requireUser()).id
 
   const subscriptions = await prisma.subscription.findMany({
-    where: { userId: user.id },
+    where: { userId: resolvedUserId },
     include: { wallet: { select: { id: true, name: true } } },
     orderBy: [{ status: "asc" }, { nextBillingDate: "asc" }],
   })
@@ -146,16 +151,16 @@ export type CreditCardSummary = {
   icon: string | null
 }
 
-export async function getCreditCards(): Promise<CreditCardSummary[]> {
-  const user = await requireUser()
+export async function getCreditCards(userId?: string): Promise<CreditCardSummary[]> {
+  const resolvedUserId = userId ?? (await requireUser()).id
 
   const [cards, wallets] = await Promise.all([
     prisma.creditCard.findMany({
-      where: { userId: user.id },
+      where: { userId: resolvedUserId },
       include: { wallet: { select: { id: true, name: true, color: true, icon: true } } },
       orderBy: { createdAt: "asc" },
     }),
-    getWallets({ includeArchived: true }),
+    getWallets({ includeArchived: true, userId: resolvedUserId }),
   ])
 
   const balanceByWallet = new Map(wallets.map((wallet) => [wallet.id, wallet.balance]))
@@ -210,11 +215,11 @@ export type LoanSummary = {
   walletId: string | null
 }
 
-export async function getLoans(): Promise<LoanSummary[]> {
-  const user = await requireUser()
+export async function getLoans(userId?: string): Promise<LoanSummary[]> {
+  const resolvedUserId = userId ?? (await requireUser()).id
 
   const loans = await prisma.loan.findMany({
-    where: { userId: user.id },
+    where: { userId: resolvedUserId },
     orderBy: [{ isActive: "desc" }, { createdAt: "asc" }],
   })
 
@@ -245,9 +250,75 @@ export async function getLoans(): Promise<LoanSummary[]> {
   })
 }
 
+export type RecurringSummary = {
+  id: string
+  name: string
+  type: TransactionType
+  amount: number
+  walletId: string
+  walletName: string
+  categoryId: string | null
+  categoryName: string | null
+  categoryIcon: string | null
+  categoryColor: string | null
+  frequency: Frequency
+  interval: number
+  startDate: string
+  endDate: string | null
+  nextRunAt: string
+  daysUntil: number
+  lastRunAt: string | null
+  autoCreate: boolean
+  isActive: boolean
+  /** Active, manual (autoCreate=false), and due soon — needs the user to confirm. */
+  isDue: boolean
+  notes: string | null
+}
+
+export async function getRecurringTransactions(userId?: string): Promise<RecurringSummary[]> {
+  const resolvedUserId = userId ?? (await requireUser()).id
+
+  const recurrings = await prisma.recurringTransaction.findMany({
+    where: { userId: resolvedUserId },
+    include: {
+      wallet: { select: { id: true, name: true } },
+      category: { select: { id: true, name: true, icon: true, color: true } },
+    },
+    orderBy: [{ isActive: "desc" }, { nextRunAt: "asc" }],
+  })
+
+  return recurrings.map((recurring) => {
+    const remaining = daysUntil(recurring.nextRunAt)
+
+    return {
+      id: recurring.id,
+      name: recurring.name,
+      type: recurring.type,
+      amount: toNumber(recurring.amount),
+      walletId: recurring.walletId,
+      walletName: recurring.wallet.name,
+      categoryId: recurring.categoryId,
+      categoryName: recurring.category?.name ?? null,
+      categoryIcon: recurring.category?.icon ?? null,
+      categoryColor: recurring.category?.color ?? null,
+      frequency: recurring.frequency,
+      interval: recurring.interval,
+      startDate: recurring.startDate.toISOString(),
+      endDate: recurring.endDate?.toISOString() ?? null,
+      nextRunAt: recurring.nextRunAt.toISOString(),
+      daysUntil: remaining,
+      lastRunAt: recurring.lastRunAt?.toISOString() ?? null,
+      autoCreate: recurring.autoCreate,
+      isActive: recurring.isActive,
+      isDue: recurring.isActive && !recurring.autoCreate && remaining <= 3,
+      notes: recurring.notes,
+    }
+  })
+}
+
 export type UpcomingBill = {
   id: string
-  kind: "SUBSCRIPTION" | "CREDIT_CARD" | "LOAN"
+  kind: "SUBSCRIPTION" | "CREDIT_CARD" | "LOAN" | "RECURRING"
   name: string
   amount: number
   dueDate: string
@@ -261,10 +332,11 @@ export type UpcomingBill = {
  * dashboard. Overdue items sort first — they are the most urgent.
  */
 export async function getUpcomingBills(withinDays = 14): Promise<UpcomingBill[]> {
-  const [subscriptions, cards, loans] = await Promise.all([
+  const [subscriptions, cards, loans, recurrings] = await Promise.all([
     getSubscriptions(),
     getCreditCards(),
     getLoans(),
+    getRecurringTransactions(),
   ])
 
   const bills: UpcomingBill[] = []
@@ -312,6 +384,24 @@ export async function getUpcomingBills(withinDays = 14): Promise<UpcomingBill[]>
       daysUntil: loan.daysUntilDue,
       color: null,
       icon: "Landmark",
+    })
+  }
+
+  // Auto-created recurring entries never need attention here — they just
+  // happen. Only manual ones (autoCreate=false) are actionable reminders.
+  for (const recurring of recurrings) {
+    if (!recurring.isActive || recurring.autoCreate) continue
+    if (recurring.daysUntil > withinDays) continue
+
+    bills.push({
+      id: `rec-${recurring.id}`,
+      kind: "RECURRING",
+      name: recurring.name,
+      amount: recurring.amount,
+      dueDate: recurring.nextRunAt,
+      daysUntil: recurring.daysUntil,
+      color: recurring.categoryColor,
+      icon: recurring.type === "INCOME" ? "TrendingUp" : "ReceiptText",
     })
   }
 

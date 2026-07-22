@@ -7,11 +7,21 @@ import { Plus, Sparkles } from "lucide-react"
 import { SIDEBAR_ITEMS, isActivePath } from "@/components/layout/nav-items"
 import { ThemeToggle } from "@/components/layout/theme-toggle"
 import { UserMenu, type SessionUser } from "@/components/layout/user-menu"
+import { NotificationBell } from "@/components/notifications/notification-bell"
 import { useTransactionSheet } from "@/components/transactions/transaction-sheet-context"
 import { Button } from "@/components/ui/button"
+import type { NotificationItem } from "@/lib/queries/notifications"
 import { cn } from "@/lib/utils"
 
-export function AppSidebar({ user }: { user: SessionUser }) {
+export function AppSidebar({
+  user,
+  notifications,
+  unreadCount,
+}: {
+  user: SessionUser
+  notifications: NotificationItem[]
+  unreadCount: number
+}) {
   const pathname = usePathname()
   const { openCreate } = useTransactionSheet()
 
@@ -22,7 +32,10 @@ export function AppSidebar({ user }: { user: SessionUser }) {
           <Sparkles className="size-4" />
         </span>
         <span className="text-[15px] font-bold tracking-tight">FinPilot AI</span>
-        <ThemeToggle className="ml-auto" />
+        <div className="ml-auto flex items-center gap-0.5">
+          <NotificationBell notifications={notifications} unreadCount={unreadCount} />
+          <ThemeToggle />
+        </div>
       </div>
 
       <div className="px-3 pb-3">

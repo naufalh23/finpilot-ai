@@ -42,8 +42,8 @@ function statusOf(ratio: number, alertAt: number): BudgetProgress["status"] {
   return "ok"
 }
 
-export async function getBudgetOverview(month: Date): Promise<BudgetOverview> {
-  const user = await requireUser()
+export async function getBudgetOverview(month: Date, userId?: string): Promise<BudgetOverview> {
+  const resolvedUserId = userId ?? (await requireUser()).id
 
   const period = monthPeriod(month)
   const from = startOfMonth(month)
@@ -51,17 +51,17 @@ export async function getBudgetOverview(month: Date): Promise<BudgetOverview> {
 
   const [budgets, spending, expenseCategories] = await Promise.all([
     prisma.budget.findMany({
-      where: { userId: user.id, period },
+      where: { userId: resolvedUserId, period },
       include: { category: { select: { id: true, name: true, icon: true, color: true } } },
       orderBy: { amount: "desc" },
     }),
     prisma.transaction.groupBy({
       by: ["categoryId"],
-      where: { userId: user.id, type: "EXPENSE", date: { gte: from, lte: to } },
+      where: { userId: resolvedUserId, type: "EXPENSE", date: { gte: from, lte: to } },
       _sum: { amount: true },
     }),
     prisma.category.findMany({
-      where: { userId: user.id, type: "EXPENSE", isArchived: false },
+      where: { userId: resolvedUserId, type: "EXPENSE", isArchived: false },
       select: { id: true, name: true, icon: true, color: true },
       orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
     }),

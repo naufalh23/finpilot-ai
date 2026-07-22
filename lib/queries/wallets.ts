@@ -26,23 +26,27 @@ export type WalletSummary = {
  */
 export async function getWallets({
   includeArchived = false,
-}: { includeArchived?: boolean } = {}): Promise<WalletSummary[]> {
-  const user = await requireUser()
+  userId,
+}: { includeArchived?: boolean; userId?: string } = {}): Promise<WalletSummary[]> {
+  // A caller acting on behalf of a specific user (the notification generator
+  // iterating all accounts) passes userId directly; a page rendering for the
+  // signed-in visitor omits it and falls back to the session.
+  const resolvedUserId = userId ?? (await requireUser()).id
 
   const [wallets, byWallet, transfersIn] = await Promise.all([
     prisma.wallet.findMany({
-      where: { userId: user.id, ...(includeArchived ? {} : { isArchived: false }) },
+      where: { userId: resolvedUserId, ...(includeArchived ? {} : { isArchived: false }) },
       orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
     }),
     prisma.transaction.groupBy({
       by: ["walletId", "type"],
-      where: { userId: user.id },
+      where: { userId: resolvedUserId },
       _sum: { amount: true },
       _count: { _all: true },
     }),
     prisma.transaction.groupBy({
       by: ["toWalletId"],
-      where: { userId: user.id, type: "TRANSFER", toWalletId: { not: null } },
+      where: { userId: resolvedUserId, type: "TRANSFER", toWalletId: { not: null } },
       _sum: { amount: true },
     }),
   ])

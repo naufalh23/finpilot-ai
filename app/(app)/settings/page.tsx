@@ -15,10 +15,12 @@ import {
 
 import { signOutAction } from "@/app/login/actions"
 import { PageHeader } from "@/components/shared/page-header"
+import { NotificationSettings } from "@/components/settings/notification-settings"
 import { ThemeSelector } from "@/components/settings/theme-selector"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { requireUser } from "@/lib/auth"
+import { getNotificationPreferences } from "@/lib/queries/notifications"
 
 export const metadata: Metadata = {
   title: "Pengaturan",
@@ -44,6 +46,7 @@ const DATA_LINKS = [
 
 export default async function SettingsPage() {
   const user = await requireUser()
+  const notificationPreferences = await getNotificationPreferences()
 
   return (
     <div className="space-y-6">
@@ -69,6 +72,14 @@ export default async function SettingsPage() {
       <section className="space-y-3">
         <h2 className="text-sm font-semibold">Tampilan</h2>
         <ThemeSelector />
+      </section>
+
+      <section className="space-y-3">
+        <h2 className="text-sm font-semibold">Notifikasi</h2>
+        <NotificationSettings
+          notifyBudget={notificationPreferences.notifyBudget}
+          notifyBills={notificationPreferences.notifyBills}
+        />
       </section>
 
       <section className="space-y-3">
