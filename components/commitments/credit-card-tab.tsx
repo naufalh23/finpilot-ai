@@ -42,6 +42,7 @@ import { PICKER_COLORS } from "@/lib/constants"
 import { formatCurrency, formatDate } from "@/lib/format"
 import type { CreditCardSummary } from "@/lib/queries/commitments"
 import type { WalletSummary } from "@/lib/queries/wallets"
+import { FIELD_LIMITS } from "@/lib/validators"
 import { cn } from "@/lib/utils"
 
 export function CreditCardTab({
@@ -324,6 +325,7 @@ function CreditCardFormSheet({
               id="card-name"
               value={name}
               onChange={(event) => setName(event.target.value)}
+              maxLength={FIELD_LIMITS.walletName}
               placeholder="mis. BCA Visa"
               className="h-11 rounded-field px-3"
             />
@@ -338,6 +340,7 @@ function CreditCardFormSheet({
                 id="card-issuer"
                 value={issuer}
                 onChange={(event) => setIssuer(event.target.value)}
+                maxLength={FIELD_LIMITS.issuer}
                 placeholder="mis. BCA"
                 className="h-11 rounded-field px-3"
               />

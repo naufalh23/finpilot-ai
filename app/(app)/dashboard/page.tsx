@@ -209,7 +209,7 @@ export default async function DashboardPage() {
             {topCategories.map((row) => (
               <li key={row.categoryId ?? "none"}>
                 <div className="mb-1.5 flex items-baseline justify-between gap-3">
-                  <span className="truncate text-sm">{row.name}</span>
+                  <span className="min-w-0 truncate text-sm">{row.name}</span>
                   <span className="tabular text-muted-foreground shrink-0 text-xs">
                     {formatCurrency(row.total)} · {Math.round(row.share * 100)}%
                   </span>

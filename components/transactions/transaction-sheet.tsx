@@ -31,6 +31,7 @@ import {
   updateTransaction,
 } from "@/lib/actions/transaction"
 import { addDays, toDateInputValue } from "@/lib/format"
+import { FIELD_LIMITS } from "@/lib/validators"
 import { cn } from "@/lib/utils"
 
 type TxType = "INCOME" | "EXPENSE" | "TRANSFER"
@@ -341,6 +342,7 @@ export function TransactionSheet() {
               <Input
                 value={form.merchant}
                 onChange={(event) => set("merchant", event.target.value)}
+                maxLength={FIELD_LIMITS.merchant}
                 placeholder="mis. Indomaret, Gojek, Tokopedia"
                 className="h-11 rounded-field px-3"
               />
@@ -351,10 +353,16 @@ export function TransactionSheet() {
             <Textarea
               value={form.notes}
               onChange={(event) => set("notes", event.target.value)}
+              maxLength={FIELD_LIMITS.notes}
               placeholder="Detail tambahan"
               rows={2}
               className="rounded-field px-3 py-2.5"
             />
+            {form.notes.length > FIELD_LIMITS.notes - 100 ? (
+              <p className="text-muted-foreground text-right text-xs">
+                {form.notes.length}/{FIELD_LIMITS.notes}
+              </p>
+            ) : null}
           </Field>
 
           <div className="flex gap-2 pt-1">

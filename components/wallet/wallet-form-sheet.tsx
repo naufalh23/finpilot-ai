@@ -21,6 +21,7 @@ import { createWallet, updateWallet } from "@/lib/actions/wallet"
 import { PICKER_COLORS, WALLET_TYPE_ICONS, WALLET_TYPE_LABELS } from "@/lib/constants"
 import type { WalletType } from "@/lib/generated/prisma/enums"
 import type { WalletSummary } from "@/lib/queries/wallets"
+import { FIELD_LIMITS } from "@/lib/validators"
 import { cn } from "@/lib/utils"
 
 const TYPES: WalletType[] = ["CASH", "BANK", "EWALLET", "CREDIT_CARD", "INVESTMENT"]
@@ -126,7 +127,7 @@ export function WalletFormSheet({
                     size="sm"
                     className="size-6 rounded-[8px]"
                   />
-                  <span className="truncate">{WALLET_TYPE_LABELS[option]}</span>
+                  <span className="min-w-0 truncate">{WALLET_TYPE_LABELS[option]}</span>
                 </button>
               ))}
             </div>
@@ -140,6 +141,7 @@ export function WalletFormSheet({
               id="wallet-name"
               value={name}
               onChange={(event) => setName(event.target.value)}
+              maxLength={FIELD_LIMITS.walletName}
               placeholder="mis. BCA, Cash, GoPay"
               className="h-11 rounded-field px-3"
             />
@@ -153,6 +155,7 @@ export function WalletFormSheet({
               id="wallet-institution"
               value={institution}
               onChange={(event) => setInstitution(event.target.value)}
+              maxLength={FIELD_LIMITS.institution}
               placeholder="mis. Bank Central Asia"
               className="h-11 rounded-field px-3"
             />

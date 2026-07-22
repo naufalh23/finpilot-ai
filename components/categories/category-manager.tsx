@@ -33,6 +33,7 @@ import {
 import { PICKER_COLORS } from "@/lib/constants"
 import type { CategoryType } from "@/lib/generated/prisma/enums"
 import type { CategorySummary } from "@/lib/queries/categories"
+import { FIELD_LIMITS } from "@/lib/validators"
 import { cn } from "@/lib/utils"
 
 export function CategoryManager({ categories }: { categories: CategorySummary[] }) {
@@ -305,6 +306,7 @@ function CategoryFormSheet({
               id="category-name"
               value={name}
               onChange={(event) => setName(event.target.value)}
+              maxLength={FIELD_LIMITS.categoryName}
               placeholder="mis. Kopi, Parkir, Donasi"
               className="h-11 rounded-field px-3"
             />

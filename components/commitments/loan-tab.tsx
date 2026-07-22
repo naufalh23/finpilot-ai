@@ -37,6 +37,7 @@ import { formatCurrency, formatDate, toDateInputValue } from "@/lib/format"
 import type { LoanType } from "@/lib/generated/prisma/enums"
 import type { LoanSummary } from "@/lib/queries/commitments"
 import type { WalletSummary } from "@/lib/queries/wallets"
+import { FIELD_LIMITS } from "@/lib/validators"
 import { cn } from "@/lib/utils"
 
 const LOAN_TYPE_LABELS: Record<LoanType, string> = {
@@ -354,6 +355,7 @@ function LoanFormSheet({
               id="loan-name"
               value={name}
               onChange={(event) => setName(event.target.value)}
+              maxLength={FIELD_LIMITS.loanName}
               placeholder="mis. KPR Rumah"
               className="h-11 rounded-field px-3"
             />
@@ -367,6 +369,7 @@ function LoanFormSheet({
               id="loan-lender"
               value={lender}
               onChange={(event) => setLender(event.target.value)}
+              maxLength={FIELD_LIMITS.lender}
               placeholder="mis. Bank BTN"
               className="h-11 rounded-field px-3"
             />

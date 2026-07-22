@@ -55,6 +55,7 @@ import type { Frequency } from "@/lib/generated/prisma/enums"
 import type { CategorySummary } from "@/lib/queries/categories"
 import type { SubscriptionSummary } from "@/lib/queries/commitments"
 import type { WalletSummary } from "@/lib/queries/wallets"
+import { FIELD_LIMITS } from "@/lib/validators"
 import { cn } from "@/lib/utils"
 
 const CYCLE_LABELS: Record<Frequency, string> = {
@@ -403,6 +404,7 @@ function SubscriptionFormSheet({
               id="sub-name"
               value={name}
               onChange={(event) => setName(event.target.value)}
+              maxLength={FIELD_LIMITS.subscriptionName}
               placeholder="mis. Netflix"
               className="h-11 rounded-field px-3"
             />

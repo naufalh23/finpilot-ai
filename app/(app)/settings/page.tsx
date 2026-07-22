@@ -1,6 +1,17 @@
 import type { Metadata } from "next"
 import Link from "next/link"
-import { ChevronRight, LogOut, Tag, Wallet } from "lucide-react"
+import type { LucideIcon } from "lucide-react"
+import {
+  Bot,
+  CalendarClock,
+  ChartPie,
+  ChevronRight,
+  LogOut,
+  PiggyBank,
+  Receipt,
+  Tag,
+  Wallet,
+} from "lucide-react"
 
 import { signOutAction } from "@/app/login/actions"
 import { PageHeader } from "@/components/shared/page-header"
@@ -13,7 +24,20 @@ export const metadata: Metadata = {
   title: "Pengaturan",
 }
 
-const LINKS = [
+/**
+ * On phones the sidebar is hidden and the bottom bar only holds four
+ * destinations, so this page doubles as the full navigation hub — otherwise
+ * Budget, Komitmen, and AI Coach would be unreachable on mobile.
+ */
+const MENU_LINKS = [
+  { href: "/transactions", label: "Transaksi", description: "Semua catatan keuangan", icon: Receipt },
+  { href: "/budget", label: "Budget", description: "Batas pengeluaran per kategori", icon: PiggyBank },
+  { href: "/commitments", label: "Komitmen", description: "Langganan, kartu kredit, pinjaman", icon: CalendarClock },
+  { href: "/reports", label: "Laporan", description: "Ringkasan per periode & export", icon: ChartPie },
+  { href: "/coach", label: "AI Coach", description: "Tanya soal keuangan Anda", icon: Bot },
+]
+
+const DATA_LINKS = [
   { href: "/settings/categories", label: "Kategori", description: "Kelola kategori transaksi", icon: Tag },
   { href: "/wallet", label: "Wallet", description: "Kelola sumber dana", icon: Wallet },
 ]
@@ -36,6 +60,12 @@ export default async function SettingsPage() {
         </div>
       </section>
 
+      {/* Hidden on desktop, where the sidebar already lists every destination. */}
+      <section className="space-y-3 lg:hidden">
+        <h2 className="text-sm font-semibold">Menu</h2>
+        <LinkList links={MENU_LINKS} />
+      </section>
+
       <section className="space-y-3">
         <h2 className="text-sm font-semibold">Tampilan</h2>
         <ThemeSelector />
@@ -43,25 +73,7 @@ export default async function SettingsPage() {
 
       <section className="space-y-3">
         <h2 className="text-sm font-semibold">Data</h2>
-        <ul className="card-surface divide-border divide-y overflow-hidden">
-          {LINKS.map((link) => (
-            <li key={link.href}>
-              <Link
-                href={link.href}
-                className="hover:bg-muted/50 flex items-center gap-3 px-4 py-3.5 transition-colors"
-              >
-                <span className="bg-muted text-muted-foreground flex size-9 items-center justify-center rounded-[11px]">
-                  <link.icon className="size-[18px]" />
-                </span>
-                <span className="min-w-0 flex-1">
-                  <span className="block text-sm font-medium">{link.label}</span>
-                  <span className="text-muted-foreground block text-xs">{link.description}</span>
-                </span>
-                <ChevronRight className="text-muted-foreground size-4" />
-              </Link>
-            </li>
-          ))}
-        </ul>
+        <LinkList links={DATA_LINKS} />
       </section>
 
       <section className="space-y-3">
@@ -80,5 +92,35 @@ export default async function SettingsPage() {
         </Button>
       </form>
     </div>
+  )
+}
+
+function LinkList({
+  links,
+}: {
+  links: { href: string; label: string; description: string; icon: LucideIcon }[]
+}) {
+  return (
+    <ul className="card-surface divide-border divide-y overflow-hidden">
+      {links.map((link) => (
+        <li key={link.href}>
+          <Link
+            href={link.href}
+            className="hover:bg-muted/50 flex items-center gap-3 px-4 py-3.5 transition-colors"
+          >
+            <span className="bg-muted text-muted-foreground flex size-9 shrink-0 items-center justify-center rounded-[11px]">
+              <link.icon className="size-[18px]" />
+            </span>
+            <span className="min-w-0 flex-1">
+              <span className="block truncate text-sm font-medium">{link.label}</span>
+              <span className="text-muted-foreground block truncate text-xs">
+                {link.description}
+              </span>
+            </span>
+            <ChevronRight className="text-muted-foreground size-4 shrink-0" />
+          </Link>
+        </li>
+      ))}
+    </ul>
   )
 }

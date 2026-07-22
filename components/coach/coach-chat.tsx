@@ -182,7 +182,7 @@ function Bubble({ message }: { message: CoachMessage }) {
   if (isUser) {
     return (
       <div className="flex justify-end">
-        <p className="bg-primary text-primary-foreground max-w-[85%] rounded-card rounded-br-md px-4 py-2.5 text-sm leading-relaxed whitespace-pre-wrap">
+        <p className="bg-primary text-primary-foreground max-w-[85%] rounded-card rounded-br-md px-4 py-2.5 text-sm leading-relaxed break-words whitespace-pre-wrap">
           {message.content}
         </p>
       </div>
@@ -196,7 +196,7 @@ function Bubble({ message }: { message: CoachMessage }) {
       </span>
       <div
         className={cn(
-          "card-surface max-w-[85%] rounded-tl-md px-4 py-3 text-sm leading-relaxed whitespace-pre-wrap"
+          "card-surface max-w-[85%] min-w-0 rounded-tl-md px-4 py-3 text-sm leading-relaxed break-words whitespace-pre-wrap"
         )}
       >
         {message.content}
