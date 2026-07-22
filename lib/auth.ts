@@ -56,6 +56,23 @@ export async function bootstrapUser(user: AppUser) {
     return
   }
 
+  // Same email, different Supabase id: the account was deleted and recreated.
+  // Creating a second row would violate the unique email and 500 every request,
+  // so re-point the existing record instead. All relations are ON UPDATE
+  // CASCADE, meaning wallets, transactions, and the rest follow the new id.
+  const byEmail = await prisma.user.findUnique({
+    where: { email: user.email },
+    select: { id: true },
+  })
+
+  if (byEmail) {
+    await prisma.user.update({
+      where: { id: byEmail.id },
+      data: { id: user.id, name: user.name, image: user.image },
+    })
+    return
+  }
+
   await prisma.$transaction([
     prisma.user.create({
       data: {

@@ -64,8 +64,9 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  // Skip Next internals and static assets.
+  // Skip Next internals, static assets, and the PWA manifest/icons — the
+  // installer fetches those without a session and must not be redirected.
   matcher: [
-    "/((?!_next/static|_next/image|favicon.ico|manifest.webmanifest|icons/|.*\\.(?:png|jpg|jpeg|svg|webp|ico)$).*)",
+    "/((?!_next/static|_next/image|favicon.ico|manifest.webmanifest|icon|apple-icon|icons/|.*\\.(?:png|jpg|jpeg|svg|webp|ico)$).*)",
   ],
 }

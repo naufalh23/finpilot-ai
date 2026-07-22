@@ -27,7 +27,9 @@ import {
 } from "@/lib/format"
 import { BUDGET_TEXT_COLORS, BudgetBar } from "@/components/budget/budget-bar"
 import { IconBadge } from "@/components/shared/icon"
+import { UpcomingBills } from "@/components/dashboard/upcoming-bills"
 import { getBudgetHighlights } from "@/lib/queries/budgets"
+import { getUpcomingBills } from "@/lib/queries/commitments"
 import { getDashboardInsight } from "@/lib/queries/insights"
 import { cn } from "@/lib/utils"
 import {
@@ -49,7 +51,7 @@ export default async function DashboardPage() {
   const monthStart = startOfMonth(now)
   const monthEnd = endOfMonth(now)
 
-  const [wallets, totals, cashFlow, breakdown, recent, insight, budgets] = await Promise.all([
+  const [wallets, totals, cashFlow, breakdown, recent, insight, budgets, bills] = await Promise.all([
     getWallets(),
     getPeriodTotals(monthStart, monthEnd),
     getMonthlyCashFlow(6),
@@ -57,6 +59,7 @@ export default async function DashboardPage() {
     getTransactions({}, { take: 6 }),
     getDashboardInsight(),
     getBudgetHighlights(now),
+    getUpcomingBills(14),
   ])
 
   const totalBalance = wallets.reduce((sum, wallet) => sum + wallet.balance, 0)
@@ -127,6 +130,8 @@ export default async function DashboardPage() {
         </div>
         <CashFlowChart data={cashFlow} />
       </section>
+
+      {bills.length > 0 ? <UpcomingBills bills={bills} /> : null}
 
       {budgets.items.length > 0 ? (
         <section className="card-surface p-5">

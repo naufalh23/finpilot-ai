@@ -1,5 +1,6 @@
 import {
   Bot,
+  CalendarClock,
   ChartPie,
   LayoutDashboard,
   PiggyBank,
@@ -20,6 +21,7 @@ export const SIDEBAR_ITEMS: NavItem[] = [
   { href: "/wallet", label: "Wallet", icon: Wallet },
   { href: "/transactions", label: "Transaksi", icon: Receipt },
   { href: "/budget", label: "Budget", icon: PiggyBank },
+  { href: "/commitments", label: "Komitmen", icon: CalendarClock },
   { href: "/reports", label: "Laporan", icon: ChartPie },
   { href: "/coach", label: "AI Coach", icon: Bot },
   { href: "/settings", label: "Pengaturan", icon: Settings },
