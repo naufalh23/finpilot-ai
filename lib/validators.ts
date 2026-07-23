@@ -17,7 +17,16 @@ export const FIELD_LIMITS = {
   lender: 60,
   investmentName: 60,
   symbol: 20,
+  profileName: 60,
+  email: 255,
 } as const
+
+export const passwordSchema = z
+  .string()
+  .min(8, "Password minimal 8 karakter")
+  .max(72, "Password maksimal 72 karakter")
+
+export const emailSchema = z.string().trim().toLowerCase().email("Email tidak valid").max(FIELD_LIMITS.email)
 
 const amount = z
   .number({ error: "Jumlah wajib diisi" })

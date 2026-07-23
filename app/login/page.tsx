@@ -3,7 +3,7 @@ import { headers } from "next/headers"
 import { redirect } from "next/navigation"
 import { Sparkles } from "lucide-react"
 
-import { GoogleSignInButton } from "@/app/login/google-sign-in-button"
+import { AuthForms } from "@/app/login/auth-forms"
 import { getSessionUser } from "@/lib/auth"
 import { isSupabaseConfigured } from "@/lib/supabase/env"
 
@@ -63,7 +63,7 @@ export default async function LoginPage({
         ) : null}
 
         {isSupabaseConfigured ? (
-          <GoogleSignInButton next={next ?? "/dashboard"} origin={origin} />
+          <AuthForms next={next ?? "/dashboard"} origin={origin} />
         ) : (
           <div className="border-warning/30 bg-warning/10 text-warning-foreground dark:text-warning rounded-field border px-4 py-3 text-sm leading-relaxed">
             Supabase belum dikonfigurasi. Isi{" "}

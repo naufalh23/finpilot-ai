@@ -11,14 +11,15 @@ import {
   Receipt,
   Tag,
   TrendingUp,
+  Upload,
   Wallet,
 } from "lucide-react"
 
 import { signOutAction } from "@/app/login/actions"
 import { PageHeader } from "@/components/shared/page-header"
+import { AccountHeader } from "@/components/settings/account-header"
 import { NotificationSettings } from "@/components/settings/notification-settings"
 import { ThemeSelector } from "@/components/settings/theme-selector"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { requireUser } from "@/lib/auth"
 import { getNotificationPreferences } from "@/lib/queries/notifications"
@@ -44,6 +45,7 @@ const MENU_LINKS = [
 const DATA_LINKS = [
   { href: "/settings/categories", label: "Kategori", description: "Kelola kategori transaksi", icon: Tag },
   { href: "/wallet", label: "Wallet", description: "Kelola sumber dana", icon: Wallet },
+  { href: "/transactions/import", label: "Import Transaksi", description: "Unggah CSV atau Excel", icon: Upload },
 ]
 
 export default async function SettingsPage() {
@@ -54,16 +56,7 @@ export default async function SettingsPage() {
     <div className="space-y-6">
       <PageHeader title="Pengaturan" />
 
-      <section className="card-surface flex items-center gap-3 p-4">
-        <Avatar className="size-12">
-          {user?.image ? <AvatarImage src={user.image} alt="" /> : null}
-          <AvatarFallback>{user?.name?.[0]?.toUpperCase() ?? "?"}</AvatarFallback>
-        </Avatar>
-        <div className="min-w-0">
-          <p className="truncate text-sm font-medium">{user?.name ?? "Akun saya"}</p>
-          <p className="text-muted-foreground truncate text-sm">{user?.email}</p>
-        </div>
-      </section>
+      <AccountHeader user={user} />
 
       {/* Hidden on desktop, where the sidebar already lists every destination. */}
       <section className="space-y-3 lg:hidden">
