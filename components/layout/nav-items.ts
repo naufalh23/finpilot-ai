@@ -6,6 +6,7 @@ import {
   PiggyBank,
   Receipt,
   Settings,
+  TrendingUp,
   Wallet,
 } from "lucide-react"
 
@@ -15,13 +16,14 @@ export type NavItem = {
   icon: typeof LayoutDashboard
 }
 
-/** Sidebar order per DESIGN.md § Navigation. */
+/** Sidebar order per DESIGN.md § Navigation, extended with modules added after that draft (Komitmen, Investasi). */
 export const SIDEBAR_ITEMS: NavItem[] = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/wallet", label: "Wallet", icon: Wallet },
   { href: "/transactions", label: "Transaksi", icon: Receipt },
   { href: "/budget", label: "Budget", icon: PiggyBank },
   { href: "/commitments", label: "Komitmen", icon: CalendarClock },
+  { href: "/investments", label: "Investasi", icon: TrendingUp },
   { href: "/reports", label: "Laporan", icon: ChartPie },
   { href: "/coach", label: "AI Coach", icon: Bot },
   { href: "/settings", label: "Pengaturan", icon: Settings },

@@ -15,6 +15,8 @@ export const FIELD_LIMITS = {
   issuer: 60,
   loanName: 60,
   lender: 60,
+  investmentName: 60,
+  symbol: 20,
 } as const
 
 const amount = z

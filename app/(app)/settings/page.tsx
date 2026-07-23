@@ -10,6 +10,7 @@ import {
   PiggyBank,
   Receipt,
   Tag,
+  TrendingUp,
   Wallet,
 } from "lucide-react"
 
@@ -35,6 +36,7 @@ const MENU_LINKS = [
   { href: "/transactions", label: "Transaksi", description: "Semua catatan keuangan", icon: Receipt },
   { href: "/budget", label: "Budget", description: "Batas pengeluaran per kategori", icon: PiggyBank },
   { href: "/commitments", label: "Komitmen", description: "Langganan, kartu kredit, pinjaman", icon: CalendarClock },
+  { href: "/investments", label: "Investasi", description: "Saham, kripto, emas, reksa dana, ETF", icon: TrendingUp },
   { href: "/reports", label: "Laporan", description: "Ringkasan per periode & export", icon: ChartPie },
   { href: "/coach", label: "AI Coach", description: "Tanya soal keuangan Anda", icon: Bot },
 ]
