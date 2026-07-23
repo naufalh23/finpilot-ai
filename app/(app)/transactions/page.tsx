@@ -1,6 +1,7 @@
 import type { Metadata } from "next"
 import { Suspense } from "react"
 import Link from "next/link"
+import { Upload } from "lucide-react"
 
 import { PageHeader } from "@/components/shared/page-header"
 import { TransactionFilters } from "@/components/transactions/transaction-filters"
@@ -62,7 +63,19 @@ export default async function TransactionsPage({
       <PageHeader
         title="Transaksi"
         description={`${total} transaksi tercatat`}
-        action={<AddTransactionButton />}
+        action={
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              className="h-10 rounded-field"
+              render={<Link href="/transactions/import" />}
+            >
+              <Upload className="size-4" />
+              Import
+            </Button>
+            <AddTransactionButton />
+          </div>
+        }
       />
 
       <Suspense fallback={<Skeleton className="h-28 w-full rounded-card" />}>

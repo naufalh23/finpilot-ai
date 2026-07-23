@@ -1,18 +1,10 @@
 "use server"
 
-import { revalidatePath } from "next/cache"
-
 import { requireUser } from "@/lib/auth"
 import { prisma } from "@/lib/db"
 import { actionError, actionOk, type ActionResult } from "@/lib/actions/types"
+import { revalidateTransactionViews } from "@/lib/actions/revalidate"
 import { transactionSchema } from "@/lib/validators"
-
-function revalidateTransactionViews() {
-  revalidatePath("/dashboard")
-  revalidatePath("/transactions")
-  revalidatePath("/wallet")
-  revalidatePath("/reports")
-}
 
 /**
  * Confirms every referenced wallet/category belongs to the caller. Without

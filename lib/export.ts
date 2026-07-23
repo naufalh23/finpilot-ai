@@ -70,7 +70,7 @@ export async function getExportRows(from: Date, to: Date): Promise<ExportRow[]> 
  * RFC 4180 escaping. A leading =, +, - or @ is prefixed with a quote so a
  * merchant name can't be interpreted as a formula when opened in Excel.
  */
-function csvCell(value: string | number) {
+export function csvCell(value: string | number) {
   if (typeof value === "number") return String(value)
 
   const guarded = /^[=+\-@\t\r]/.test(value) ? `'${value}` : value
