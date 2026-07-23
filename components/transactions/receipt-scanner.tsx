@@ -5,6 +5,7 @@ import { Camera, ImageUp, Loader2, Sparkles } from "lucide-react"
 import { toast } from "sonner"
 
 import { scanReceipt, type ReceiptDraft } from "@/lib/actions/ai"
+import { compressImageFile } from "@/lib/upload/compress-image"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 
@@ -15,7 +16,8 @@ export function ReceiptScanner({
   onExtracted,
   className,
 }: {
-  onExtracted: (draft: ReceiptDraft) => void
+  /** `file` is the (possibly compressed) image actually sent — kept for the caller to attach later. */
+  onExtracted: (draft: ReceiptDraft, file: File) => void
   className?: string
 }) {
   const [pending, setPending] = React.useState(false)
@@ -44,8 +46,10 @@ export function ReceiptScanner({
     setPending(true)
 
     try {
+      const compressed = await compressImageFile(file)
+
       const formData = new FormData()
-      formData.append("file", file)
+      formData.append("file", compressed)
 
       const result = await scanReceipt(formData)
 
@@ -54,7 +58,7 @@ export function ReceiptScanner({
         return
       }
 
-      onExtracted(result.data)
+      onExtracted(result.data, compressed)
       toast.success(
         result.data.merchant
           ? `Struk ${result.data.merchant} terbaca`

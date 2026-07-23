@@ -93,6 +93,27 @@ export function endOfMonth(date: Date) {
   return new Date(date.getFullYear(), date.getMonth() + 1, 0, 23, 59, 59, 999)
 }
 
+/** Monday-start week, matching the Indonesian convention used elsewhere in the app. */
+export function startOfWeek(date: Date) {
+  const next = startOfDay(date)
+  const day = next.getDay() // 0 = Sunday
+  const diff = day === 0 ? 6 : day - 1
+  next.setDate(next.getDate() - diff)
+  return next
+}
+
+export function endOfWeek(date: Date) {
+  return endOfDay(addDays(startOfWeek(date), 6))
+}
+
+export function startOfYear(date: Date) {
+  return new Date(date.getFullYear(), 0, 1, 0, 0, 0, 0)
+}
+
+export function endOfYear(date: Date) {
+  return new Date(date.getFullYear(), 11, 31, 23, 59, 59, 999)
+}
+
 export function addMonths(date: Date, months: number) {
   const next = new Date(date)
   next.setMonth(next.getMonth() + months)

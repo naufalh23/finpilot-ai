@@ -1,11 +1,12 @@
 "use client"
 
 import * as React from "react"
-import { ArrowRightLeft, Plus, Receipt, Sparkles } from "lucide-react"
+import { ArrowRightLeft, Paperclip, Plus, Receipt, Sparkles } from "lucide-react"
 
 import { Amount } from "@/components/shared/amount"
 import { EmptyState } from "@/components/shared/empty-state"
 import { IconBadge } from "@/components/shared/icon"
+import { ReceiptViewerDialog } from "@/components/transactions/receipt-viewer-dialog"
 import { useTransactionSheet } from "@/components/transactions/transaction-sheet-context"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -40,6 +41,7 @@ export function TransactionList({
   showDayHeadings?: boolean
 }) {
   const { openCreate } = useTransactionSheet()
+  const [viewingReceiptFor, setViewingReceiptFor] = React.useState<string | null>(null)
 
   if (transactions.length === 0) {
     return (
@@ -61,11 +63,22 @@ export function TransactionList({
 
   if (!showDayHeadings) {
     return (
-      <ul className="card-surface divide-border divide-y overflow-hidden">
-        {transactions.map((transaction) => (
-          <TransactionRow key={transaction.id} transaction={transaction} />
-        ))}
-      </ul>
+      <>
+        <ul className="card-surface divide-border divide-y overflow-hidden">
+          {transactions.map((transaction) => (
+            <TransactionRow
+              key={transaction.id}
+              transaction={transaction}
+              onViewReceipt={setViewingReceiptFor}
+            />
+          ))}
+        </ul>
+        <ReceiptViewerDialog
+          transactionId={viewingReceiptFor}
+          open={viewingReceiptFor !== null}
+          onOpenChange={(open) => !open && setViewingReceiptFor(null)}
+        />
+      </>
     )
   }
 
@@ -88,17 +101,32 @@ export function TransactionList({
             </div>
             <ul className="card-surface divide-border divide-y overflow-hidden">
               {group.items.map((transaction) => (
-                <TransactionRow key={transaction.id} transaction={transaction} />
+                <TransactionRow
+                  key={transaction.id}
+                  transaction={transaction}
+                  onViewReceipt={setViewingReceiptFor}
+                />
               ))}
             </ul>
           </section>
         )
       })}
+      <ReceiptViewerDialog
+        transactionId={viewingReceiptFor}
+        open={viewingReceiptFor !== null}
+        onOpenChange={(open) => !open && setViewingReceiptFor(null)}
+      />
     </div>
   )
 }
 
-function TransactionRow({ transaction }: { transaction: TransactionListItem }) {
+function TransactionRow({
+  transaction,
+  onViewReceipt,
+}: {
+  transaction: TransactionListItem
+  onViewReceipt: (transactionId: string) => void
+}) {
   const { openEdit } = useTransactionSheet()
 
   const isTransfer = transaction.type === "TRANSFER"
@@ -120,7 +148,7 @@ function TransactionRow({ transaction }: { transaction: TransactionListItem }) {
     : [transaction.category?.name, transaction.wallet.name].filter(Boolean).join(" · ")
 
   return (
-    <li>
+    <li className="hover:bg-muted/50 flex items-center transition-colors">
       <button
         type="button"
         onClick={() =>
@@ -136,7 +164,7 @@ function TransactionRow({ transaction }: { transaction: TransactionListItem }) {
             notes: transaction.notes,
           })
         }
-        className="hover:bg-muted/50 flex w-full items-center gap-3 px-4 py-3 text-left transition-colors"
+        className="flex min-w-0 flex-1 items-center gap-3 px-4 py-3 text-left"
       >
         {isTransfer ? (
           <span className="bg-primary/12 text-primary flex size-10 shrink-0 items-center justify-center rounded-[12px]">
@@ -173,6 +201,17 @@ function TransactionRow({ transaction }: { transaction: TransactionListItem }) {
           ) : null}
         </div>
       </button>
+
+      {transaction.attachmentCount > 0 ? (
+        <button
+          type="button"
+          onClick={() => onViewReceipt(transaction.id)}
+          className="text-muted-foreground hover:text-foreground hover:bg-muted mr-3 flex size-8 shrink-0 items-center justify-center rounded-field transition-colors"
+          aria-label="Lihat struk"
+        >
+          <Paperclip className="size-4" />
+        </button>
+      ) : null}
     </li>
   )
 }

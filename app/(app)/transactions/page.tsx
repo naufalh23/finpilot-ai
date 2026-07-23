@@ -32,6 +32,9 @@ export default async function TransactionsPage({
 
   const page = Math.max(1, Number(single("page") ?? 1) || 1)
 
+  const from = single("from")
+  const to = single("to")
+
   const { items, total, hasMore } = await getTransactions(
     {
       q: single("q"),
@@ -39,6 +42,8 @@ export default async function TransactionsPage({
       status: single("status") as TransactionStatus | undefined,
       walletId: single("wallet"),
       categoryId: single("category"),
+      from: from ? new Date(from) : undefined,
+      to: to ? new Date(to) : undefined,
     },
     { take: PAGE_SIZE, skip: (page - 1) * PAGE_SIZE }
   )

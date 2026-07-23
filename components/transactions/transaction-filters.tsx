@@ -2,7 +2,8 @@
 
 import * as React from "react"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
-import { Search, X } from "lucide-react"
+import { CalendarRange, Loader2, Search, Sparkles, X } from "lucide-react"
+import { toast } from "sonner"
 
 import { useTransactionSheet } from "@/components/transactions/transaction-sheet-context"
 import { Button } from "@/components/ui/button"
@@ -14,6 +15,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { parseTransactionSearch } from "@/lib/actions/search"
+import { formatDate } from "@/lib/format"
 import { cn } from "@/lib/utils"
 
 const TYPE_FILTERS = [
@@ -30,12 +33,15 @@ export function TransactionFilters() {
 
   const [query, setQuery] = React.useState(searchParams.get("q") ?? "")
   const [, startTransition] = React.useTransition()
+  const [aiPending, startAiTransition] = React.useTransition()
   const { wallets, categories } = useTransactionSheet()
 
   const type = searchParams.get("type") ?? ""
   const walletId = searchParams.get("wallet") ?? ""
   const categoryId = searchParams.get("category") ?? ""
-  const hasFilters = Boolean(type || walletId || categoryId || searchParams.get("q"))
+  const from = searchParams.get("from")
+  const to = searchParams.get("to")
+  const hasFilters = Boolean(type || walletId || categoryId || from || to || searchParams.get("q"))
 
   const push = React.useCallback(
     (mutate: (params: URLSearchParams) => void) => {
@@ -65,14 +71,63 @@ export function TransactionFilters() {
     return () => clearTimeout(timer)
   }, [query, push, searchParams])
 
+  /**
+   * Enter runs the query through Gemini and replaces the filters with what it
+   * understood — typing without Enter stays the plain, free, instant substring
+   * search above, so a simple keyword like "kopi" never pays for an AI call.
+   */
+  function runAiSearch() {
+    if (!query.trim() || aiPending) return
+
+    startAiTransition(async () => {
+      const result = await parseTransactionSearch(query)
+
+      if (!result.ok) {
+        toast.error(result.error)
+        return
+      }
+
+      const data = result.data
+      push((params) => {
+        if (data.type) params.set("type", data.type)
+        else params.delete("type")
+
+        if (data.categoryId) params.set("category", data.categoryId)
+        else params.delete("category")
+
+        if (data.from) params.set("from", data.from)
+        else params.delete("from")
+
+        if (data.to) params.set("to", data.to)
+        else params.delete("to")
+
+        if (data.merchant) params.set("q", data.merchant)
+        else params.delete("q")
+      })
+      setQuery(data.merchant ?? "")
+      toast.success(data.label)
+    })
+  }
+
   return (
     <div className="space-y-3">
       <div className="relative">
-        <Search className="text-muted-foreground pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2" />
+        {aiPending ? (
+          <Loader2 className="text-ai pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 animate-spin" />
+        ) : (
+          <Search className="text-muted-foreground pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2" />
+        )}
         <Input
           value={query}
           onChange={(event) => setQuery(event.target.value)}
-          placeholder="Cari merchant, catatan, kategori…"
+          onKeyDown={(event) => {
+            if (event.key === "Enter") {
+              event.preventDefault()
+              runAiSearch()
+            }
+          }}
+          placeholder="Cari, atau ketik pertanyaan lalu Enter — mis. pengeluaran makan bulan ini"
+          disabled={aiPending}
           className="h-11 rounded-field pr-10 pl-9"
         />
         {query ? (
@@ -86,6 +141,11 @@ export function TransactionFilters() {
           </button>
         ) : null}
       </div>
+
+      <p className="text-ai flex items-center gap-1 text-xs">
+        <Sparkles className="size-3" />
+        Coba ketik pertanyaan, mis. &quot;pengeluaran makan bulan ini&quot;, lalu tekan Enter
+      </p>
 
       <div className="flex flex-wrap items-center gap-2">
         <div className="bg-muted flex gap-1 rounded-field p-1">
@@ -160,6 +220,21 @@ export function TransactionFilters() {
             ))}
           </SelectContent>
         </Select>
+
+        {from && to ? (
+          <span className="bg-muted text-muted-foreground flex h-9 items-center gap-1.5 rounded-field px-3 text-xs">
+            <CalendarRange className="size-3.5" />
+            {formatDate(new Date(from))}–{formatDate(new Date(to))}
+            <button
+              type="button"
+              onClick={() => push((params) => { params.delete("from"); params.delete("to") })}
+              className="hover:text-foreground"
+              aria-label="Hapus rentang tanggal"
+            >
+              <X className="size-3.5" />
+            </button>
+          </span>
+        ) : null}
 
         {hasFilters ? (
           <Button

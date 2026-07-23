@@ -25,6 +25,7 @@ import {
 } from "@/components/ui/select"
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet"
 import { Textarea } from "@/components/ui/textarea"
+import { uploadReceiptAttachment } from "@/lib/actions/attachment"
 import {
   createTransaction,
   deleteTransaction,
@@ -77,6 +78,7 @@ export function TransactionSheet() {
   const [pending, startTransition] = React.useTransition()
   const [errors, setErrors] = React.useState<Record<string, string>>({})
   const [scanned, setScanned] = React.useState<ReceiptDraft | null>(null)
+  const [receiptFile, setReceiptFile] = React.useState<File | null>(null)
 
   // Reset the form each time the sheet is opened, not on every render.
   React.useEffect(() => {
@@ -84,12 +86,14 @@ export function TransactionSheet() {
       setForm(initialState(draft, defaultWalletId))
       setErrors({})
       setScanned(null)
+      setReceiptFile(null)
     }
   }, [open, draft, defaultWalletId])
 
   /** Fills the form from a scanned receipt, leaving anything unread untouched. */
-  function applyReceipt(receipt: ReceiptDraft) {
+  function applyReceipt(receipt: ReceiptDraft, file: File) {
     setScanned(receipt)
+    setReceiptFile(file)
     setErrors({})
     setForm((current) => ({
       ...current,
@@ -160,9 +164,28 @@ export function TransactionSheet() {
     }
 
     startTransition(async () => {
-      const result = draft?.id
-        ? await updateTransaction(draft.id, payload)
-        : await createTransaction(payload)
+      if (draft?.id) {
+        const result = await updateTransaction(draft.id, payload)
+
+        if (!result.ok) {
+          toast.error(result.error)
+          if (result.fieldErrors) {
+            setErrors(
+              Object.fromEntries(
+                Object.entries(result.fieldErrors).map(([key, messages]) => [key, messages[0]])
+              )
+            )
+          }
+          return
+        }
+
+        toast.success("Transaksi diperbarui")
+        close()
+        router.refresh()
+        return
+      }
+
+      const result = await createTransaction(payload)
 
       if (!result.ok) {
         toast.error(result.error)
@@ -176,7 +199,22 @@ export function TransactionSheet() {
         return
       }
 
-      toast.success(isEdit ? "Transaksi diperbarui" : "Transaksi tersimpan")
+      // Best-effort: the transaction is already saved either way, so a failed
+      // upload here is a warning, not something that should undo the save.
+      if (receiptFile) {
+        const attachmentForm = new FormData()
+        attachmentForm.append("file", receiptFile)
+        const uploadResult = await uploadReceiptAttachment(result.data.id, attachmentForm)
+
+        if (!uploadResult.ok) {
+          toast.error(`Transaksi tersimpan, tapi struk gagal diunggah (${uploadResult.error})`)
+          close()
+          router.refresh()
+          return
+        }
+      }
+
+      toast.success("Transaksi tersimpan")
       close()
       router.refresh()
     })
